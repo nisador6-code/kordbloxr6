@@ -1,39 +1,56 @@
-local p = game.Players.LocalPlayer
-local function apply()
-    local char = p.Character or p.CharacterAdded:Wait()
-    local torso = char:WaitForChild("Torso", 5)
-    local legs = {
-        {name = "Right Leg", offset = 0.5},
-        {name = "Left Leg", offset = -0.5}
-    }
-    for _, info in pairs(legs) do
-        local rl = char:FindFirstChild(info.name)
-        if rl and torso then
-            rl.Transparency = 1
-            -- Создаем деталь
-            local bone = Instance.new("Part", char)
-            bone.Name = info.name.."_Korblox"
-            bone.Size = Vector3.new(1, 2, 1)
-            bone.CanCollide = false
-            
-            local weld = Instance.new("Weld", bone)
-            weld.Part0 = torso
-            weld.Part1 = bone
-            weld.C0 = CFrame.new(info.offset, -1, 0)
-            
-            -- Используем MeshPart ID (иногда обходит блок)
-            local m = Instance.new("SpecialMesh", bone)
-            m.MeshType = Enum.MeshType.FileMesh
-            m.MeshId = "rbxassetid://902945221" -- Оригинал кости
-            m.TextureId = "rbxassetid://902940643" -- Оригинал текстуры
-            m.Scale = Vector3.new(1.2, 1.2, 1.2)
+-- [[ Склеенный скрипт: Кхен + Вторая Нога ]]
+
+-- 1. Запускаем оригинал Кхена (он ставит правую ногу и обходит античит)
+pcall(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/khen791/script-khen/refs/heads/main/KorbloxAndHeadless.txt"))()
+end)
+
+-- 2. Наш код на левую ногу (чтобы было две)
+local player = game.Players.LocalPlayer
+local function addLeftLeg()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local torso = char:WaitForChild("Torso", 5) or char:WaitForChild("LowerTorso", 5)
+    
+    -- Ждем чуть-чуть, чтобы скрипт Кхена успел прогрузиться
+    task.wait(2.5)
+    
+    local leftLeg = char:FindFirstChild("Left Leg") or char:FindFirstChild("LeftUpperLeg")
+    if leftLeg and torso then
+        leftLeg.Transparency = 1
+        
+        -- Создаем кость
+        local bone = Instance.new("Part", char)
+        bone.Name = "LeftLeg_Korblox"
+        bone.Size = Vector3.new(1, 2, 1)
+        bone.CanCollide = false
+        bone.Massless = true
+        
+        local weld = Instance.new("Weld", bone)
+        weld.Part0 = torso
+        weld.Part1 = bone
+        -- Офсет -0.5 ставит ногу ровно слева
+        weld.C0 = CFrame.new(-0.5, -1, 0)
+        
+        local mesh = Instance.new("SpecialMesh", bone)
+        mesh.MeshId = "rbxassetid://902945221"
+        mesh.TextureId = "rbxassetid://902940643"
+        mesh.Scale = Vector3.new(1.1, 1.1, 1.1)
+        
+        -- Скрываем аксессуары на левой ноге, если есть
+        for _, v in pairs(char:GetChildren()) do
+            if v:IsA("Accessory") and v:FindFirstChild("Handle") then
+                if v.Handle:FindFirstChild("LeftLegAttachment") or v.Handle:FindFirstChild("LeftFootAttachment") then
+                    v.Handle.Transparency = 1
+                end
+            end
         end
     end
 end
 
--- Ждем 3 секунды после спавна, чтобы игра не успела заблочить
-p.CharacterAdded:Connect(function() 
-    task.wait(3) 
-    apply() 
+-- Запуск при загрузке и после каждой смерти
+task.spawn(addLeftLeg)
+player.CharacterAdded:Connect(function()
+    addLeftLeg()
 end)
-apply()
+
+print("Khen + Double Leg Loaded!")
