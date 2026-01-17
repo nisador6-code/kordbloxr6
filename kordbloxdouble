@@ -1,56 +1,61 @@
--- [[ Склеенный скрипт: Кхен + Вторая Нога ]]
-
--- 1. Запускаем оригинал Кхена (он ставит правую ногу и обходит античит)
-pcall(function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/khen791/script-khen/refs/heads/main/KorbloxAndHeadless.txt"))()
-end)
-
--- 2. Наш код на левую ногу (чтобы было две)
+-- [[ KORBLOX DOUBLE LEG - STRICT R6 ONLY ]]
 local player = game.Players.LocalPlayer
-local function addLeftLeg()
+
+local function applyKorblox()
     local char = player.Character or player.CharacterAdded:Wait()
-    local torso = char:WaitForChild("Torso", 5) or char:WaitForChild("LowerTorso", 5)
+    local torso = char:WaitForChild("Torso", 5)
     
-    -- Ждем чуть-чуть, чтобы скрипт Кхена успел прогрузиться
-    task.wait(2.5)
-    
-    local leftLeg = char:FindFirstChild("Left Leg") or char:FindFirstChild("LeftUpperLeg")
-    if leftLeg and torso then
-        leftLeg.Transparency = 1
-        
-        -- Создаем кость
-        local bone = Instance.new("Part", char)
-        bone.Name = "LeftLeg_Korblox"
-        bone.Size = Vector3.new(1, 2, 1)
-        bone.CanCollide = false
-        bone.Massless = true
-        
-        local weld = Instance.new("Weld", bone)
-        weld.Part0 = torso
-        weld.Part1 = bone
-        -- Офсет -0.5 ставит ногу ровно слева
-        weld.C0 = CFrame.new(-0.5, -1, 0)
-        
-        local mesh = Instance.new("SpecialMesh", bone)
-        mesh.MeshId = "rbxassetid://902945221"
-        mesh.TextureId = "rbxassetid://902940643"
-        mesh.Scale = Vector3.new(1.1, 1.1, 1.1)
-        
-        -- Скрываем аксессуары на левой ноге, если есть
-        for _, v in pairs(char:GetChildren()) do
-            if v:IsA("Accessory") and v:FindFirstChild("Handle") then
-                if v.Handle:FindFirstChild("LeftLegAttachment") or v.Handle:FindFirstChild("LeftFootAttachment") then
-                    v.Handle.Transparency = 1
-                end
+    if torso then
+        -- Список ног для R6
+        local legs = {
+            {name = "Right Leg", offset = 0.5},
+            {name = "Left Leg", offset = -0.5}
+        }
+
+        for _, info in pairs(legs) do
+            local leg = char:FindFirstChild(info.name)
+            if leg then
+                -- Делаем оригинальную ногу полностью невидимой
+                leg.Transparency = 1
+                
+                -- Удаляем старую кость, если она осталась с прошлого раза
+                local oldBone = char:FindFirstChild(info.name.."_KB")
+                if oldBone then oldBone:Destroy() end
+
+                -- Создаем деталь кости
+                local bone = Instance.new("Part")
+                bone.Name = info.name.."_KB"
+                bone.Size = Vector3.new(1, 2, 1)
+                bone.CanCollide = false
+                bone.Massless = true
+                bone.Parent = char
+                
+                local weld = Instance.new("Weld", bone)
+                weld.Part0 = torso
+                weld.Part1 = bone
+                weld.C0 = CFrame.new(info.offset, -1, 0)
+                
+                local mesh = Instance.new("SpecialMesh", bone)
+                mesh.MeshId = "rbxassetid://902945221"
+                mesh.TextureId = "rbxassetid://902940643"
+                mesh.Scale = Vector3.new(1.15, 1.15, 1.15) -- Чуть увеличил для стиля
+
+                -- Если игра попытается вернуть видимость ноге, этот цикл её скроет
+                task.spawn(function()
+                    while char and char:Parent do
+                        if leg.Transparency ~= 1 then
+                            leg.Transparency = 1
+                        end
+                        task.wait(1)
+                    end
+                end)
             end
         end
     end
 end
 
--- Запуск при загрузке и после каждой смерти
-task.spawn(addLeftLeg)
-player.CharacterAdded:Connect(function()
-    addLeftLeg()
-end)
+-- Запуск при выполнении и после каждой смерти
+task.spawn(applyKorblox)
+player.CharacterAdded:Connect(applyKorblox)
 
-print("Khen + Double Leg Loaded!")
+print("Double Korblox R6 Loaded!")
