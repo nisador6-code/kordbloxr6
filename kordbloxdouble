@@ -1,0 +1,29 @@
+local p = game.Players.LocalPlayer
+local function apply()
+    local char = p.Character or p.CharacterAdded:Wait()
+    local torso = char:WaitForChild("Torso", 5)
+    local legs = {
+        {name = "Right Leg", offset = 0.5},
+        {name = "Left Leg", offset = -0.5}
+    }
+    for _, info in pairs(legs) do
+        local rl = char:FindFirstChild(info.name)
+        if rl and torso then
+            rl.Transparency = 1
+            local bone = Instance.new("Part", char)
+            bone.Name = info.name.."_Bone"
+            bone.Size = Vector3.new(1, 2, 1)
+            bone.CanCollide = false
+            local weld = Instance.new("Weld", bone)
+            weld.Part0 = torso
+            weld.Part1 = bone
+            weld.C0 = CFrame.new(info.offset, -1, 0)
+            local m = Instance.new("SpecialMesh", bone)
+            m.MeshId = "rbxassetid://902945221"
+            m.TextureId = "rbxassetid://902940643"
+            m.Scale = Vector3.new(1.1, 1.1, 1.1)
+        end
+    end
+end
+p.CharacterAdded:Connect(function() task.wait(1.5) apply() end)
+apply()
