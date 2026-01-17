@@ -10,20 +10,30 @@ local function apply()
         local rl = char:FindFirstChild(info.name)
         if rl and torso then
             rl.Transparency = 1
+            -- Создаем деталь
             local bone = Instance.new("Part", char)
-            bone.Name = info.name.."_Bone"
+            bone.Name = info.name.."_Korblox"
             bone.Size = Vector3.new(1, 2, 1)
             bone.CanCollide = false
+            
             local weld = Instance.new("Weld", bone)
             weld.Part0 = torso
             weld.Part1 = bone
             weld.C0 = CFrame.new(info.offset, -1, 0)
+            
+            -- Используем MeshPart ID (иногда обходит блок)
             local m = Instance.new("SpecialMesh", bone)
-            m.MeshId = "rbxassetid://902945221"
-            m.TextureId = "rbxassetid://902940643"
-            m.Scale = Vector3.new(1.1, 1.1, 1.1)
+            m.MeshType = Enum.MeshType.FileMesh
+            m.MeshId = "rbxassetid://902945221" -- Оригинал кости
+            m.TextureId = "rbxassetid://902940643" -- Оригинал текстуры
+            m.Scale = Vector3.new(1.2, 1.2, 1.2)
         end
     end
 end
-p.CharacterAdded:Connect(function() task.wait(1.5) apply() end)
+
+-- Ждем 3 секунды после спавна, чтобы игра не успела заблочить
+p.CharacterAdded:Connect(function() 
+    task.wait(3) 
+    apply() 
+end)
 apply()
